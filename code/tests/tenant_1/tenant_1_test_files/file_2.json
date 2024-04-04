@@ -1,0 +1,35 @@
+{
+    "id": 19543443025,
+    "sampling_rate": null,
+    "timestamp": "2024-03-08 16:11:01",
+    "location": {
+        "id": 29904,
+        "latitude": "51.058",
+        "longitude": "5.378",
+        "altitude": "71.8",
+        "country": "BE",
+        "exact_location": 0,
+        "indoor": 0
+    },
+    "sensor": {
+        "id": 44229,
+        "pin": "7",
+        "sensor_type": {
+            "id": 9,
+            "name": "DHT22",
+            "manufacturer": "various"
+        }
+    },
+    "sensordatavalues": [
+        {
+            "id": 44407351364,
+            "value": "11.30",
+            "value_type": "temperature"
+        },
+        {
+            "id": 44407351366,
+            "value": "99.90",
+            "value_type": "humidity"
+        }
+    ]
+}

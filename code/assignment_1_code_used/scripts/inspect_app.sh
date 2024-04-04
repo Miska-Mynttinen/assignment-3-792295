@@ -1,0 +1,1 @@
+docker exec -it mysimbdp /bin/bash

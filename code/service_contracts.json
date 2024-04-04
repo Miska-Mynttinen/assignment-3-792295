@@ -1,0 +1,30 @@
+[
+    {
+        "tenantId": "1",
+        "paymentGroup": "1",
+        "data_file_constraints": {
+            "file_format": "JSON",
+            "max_num_of_files": 10,
+            "max_file_size_megabytes": 10
+        },
+        "service_agreement_constraints": {
+            "agreement_duration_months": 12,
+            "cost_per_MB_in_euro": 0.01,
+            "service_availability_in_percent": 99
+        }
+    },
+    {
+        "tenantId": "2",
+        "paymentGroup": "2",
+        "data_file_constraints": {
+            "file_format": "JSON",
+            "max_num_of_files": 5,
+            "max_file_size_megabytes": 5
+        },
+        "service_agreement_constraints": {
+            "agreement_duration_months": 6,
+            "cost_per_MB_in_euro": 0.02,
+            "service_availability_in_percent": 95
+        }
+    }
+]
