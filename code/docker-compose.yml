@@ -159,7 +159,7 @@ services:
       - ME_CONFIG_MONGODB_ADMINPASSWORD=password
 
 
-  # ASSIGNMENT 2:
+  # ASSIGNMENT 3:
   spark:
     container_name: spark
     image: bitnami/spark:latest

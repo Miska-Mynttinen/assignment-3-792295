@@ -45,7 +45,7 @@ function runScript(args, scriptPath) {
 
 async function runPythonScript(files) {
   try {
-    const { avgTemp, avgHumidity } = await runScript(files, './sparkProcessor.py');
+    const { avgTemp, avgHumidity } = await runScript(files, './streanProcessor.py');
     console.log('Average Temperature:', avgTemp);
     console.log('Average Humidity:', avgHumidity);
     console.log('Success');

@@ -1,6 +1,6 @@
-const { clientbatchingest } = require('./clientbatchingestapp.js')
+const { clientstreamingest } = require('./client-stream-app')
 
-class MySimBDPBatchIngestManager {
+class IngestManager {
     constructor() {
         this._inputDirectory = null;
         this.scheduleArray = [];
@@ -27,9 +27,9 @@ class MySimBDPBatchIngestManager {
         }
     }
 
-    callClientIngestionApp = (tenantId, dataId) => {
+    callClientStreamApp = (tenantId, dataId) => {
         // An API call to the specifix tenants clientbatchingestionapp which is a black box.
-        clientbatchingest(tenantId, dataId, this._inputDirectory);
+        clientstreamingest(tenantId, dataId, this._inputDirectory);
     }
     
     scheduleJobs = () => {
@@ -42,7 +42,7 @@ class MySimBDPBatchIngestManager {
                 break
             }
             
-            this.callClientIngestionApp(job[0], job[1]);
+            this.callClientStreamApp(job[0], job[1]);
             // Remove started job from schedule
             amountOfJobs = amountOfJobs - 1;
             this.scheduleArray.shift();
@@ -52,4 +52,4 @@ class MySimBDPBatchIngestManager {
     }
 }
 
-module.exports = MySimBDPBatchIngestManager;
+module.exports = IngestManager;

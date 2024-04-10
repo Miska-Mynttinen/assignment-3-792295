@@ -12,8 +12,8 @@ const { createAgreement } = require('./database_api/agreementService.js');
 require('express-async-errors');
 require('dotenv').config();
 const serviceAgreements = require('./service_contracts.json');
-const MySimBDPBatchIngestManager = require('./batchingestmanager.js');
-const ClientStagingInputDirectory = require('./client-staging-input-directory.js');
+const IngestManager = require('./ingest-manager.js');
+const StreamInput = require('./stream-input.js');
 
 // Checks if main initialization instance for the application so duplicates aren't created when running tests
 // Avoids errors of port being in use
@@ -53,8 +53,8 @@ if (require.main === module) {
   serviceAgreements.forEach((agreement) => createAgreement(agreement));
 }
 
-const manager = new MySimBDPBatchIngestManager();
-const inputDirectory = new ClientStagingInputDirectory(manager);
+const manager = new IngestManager();
+const inputDirectory = new StreamInput(manager);
 manager.inputDirectory = inputDirectory;
 
 module.exports = { inputDirectory };

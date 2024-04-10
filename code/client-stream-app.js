@@ -36,7 +36,7 @@ const wrangleData = (tenantId, data) => {
 }*/
 
 
-const clientbatchingest = (tenantId, dataId, inputDirectory) => {
+const clientstreamingest = (tenantId, dataId, inputDirectory) => {
     const data = readFiles(tenantId, dataId, inputDirectory);
     const wrangledData = wrangleData(tenantId, data);
     // Ingest data into mysimbdp-coredms through mysimbdp-daas API
@@ -47,4 +47,4 @@ const clientbatchingest = (tenantId, dataId, inputDirectory) => {
     batchProcess(tenantId, wrangledData);
 }
 
-module.exports = { clientbatchingest };
+module.exports = { clientstreamingest };

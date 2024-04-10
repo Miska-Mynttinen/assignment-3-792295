@@ -1,7 +1,7 @@
-const { getAgreements } = require('./database_api/agreementService');
+const { getAgreements } = require('./database_api/agreementService.js');
 const { createLog } = require('./logger.js')
 
-class ClientStagingInputDirectory {
+class StreamInput {
     constructor(MySimBDPBatchIngestManager) {
         this.manager = MySimBDPBatchIngestManager;
         this.files = [];
@@ -78,4 +78,4 @@ class ClientStagingInputDirectory {
 
 }
 
-module.exports = ClientStagingInputDirectory;
+module.exports = StreamInput;
