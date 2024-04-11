@@ -1,4 +1,4 @@
-const { inputDirectory } = require('../../index.js')
+const { streamInput } = require('../../index.js')
 // const { getTestSourceData } = require('../../assignment_1_code_used/dataService.js');
 const files_12 = require('./tenant_1_test_files/file_12_JSON_files.json');
 
@@ -21,7 +21,7 @@ async function runTest(sourceData) {
     console.log('tooManyFiles.length', tooManyFiles.length);
 
     try {
-        const returnValue = await inputDirectory.putFilesIntoInputDirectory(tooManyFiles, '1');
+        const returnValue = await streamInput.putFilesIntoStreamInput(tooManyFiles, '1');
         console.log('returnValue:', returnValue)
         if (returnValue === `Too many files inserted at once. Allowed maximum: 10`) {
             // Handle the specific error

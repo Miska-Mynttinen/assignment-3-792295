@@ -2,6 +2,7 @@ require('axios');
 const { Kafka } = require('kafkajs');
 // const { create } = require('./dataService');
 const { create } = require('../database_api/tenantService');
+const { ingestData } = require('../mysimbdp-daas')
 
 
 const kafka = new Kafka({
@@ -16,6 +17,7 @@ const kafka = new Kafka({
 
 const consume = async (topic, groupId) => {
     const consumer = kafka.consumer({ groupId: groupId });
+    const messages = []
     const createPromises = [];
     try {
         await consumer.connect();
@@ -23,7 +25,8 @@ const consume = async (topic, groupId) => {
         await consumer.run({
             eachMessage: async ({ topic, partition, message }) => {
                 const data = JSON.parse(message.value.toString())
-                const createResult = create(data);
+                const createResult = ingestData(data);
+                messages.push(data)
                 createPromises.push(createResult);
             },
         });
@@ -32,7 +35,7 @@ const consume = async (topic, groupId) => {
     }
 
     // Return consumer in order to disconnect with consumer.disconnect()
-    return [consumer, createPromises];
+    return [consumer, messages, createPromises];
 };
 
 module.exports = consume;

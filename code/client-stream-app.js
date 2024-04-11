@@ -1,20 +1,9 @@
-const { ingestData, batchProcess } = require('./mysimbdp-daas.js')
+const { ingestData, streamProcess } = require('./mysimbdp-daas.js')
+const consume = require('./client_raw_data_kafka_consumer.js');
 
-const readFiles = (tenantId, dataId, inputDirectory) => {
+const readFiles = async (tenantId, dataId, streamInput) => {
     // Read data from JSON file as an example
-    const data = inputDirectory.giveDataToTenant(tenantId, dataId);
-    // this.data = JSON.parse(fileContent);
-    return data
-}
-
-const wrangleData = (tenantId, data) => {
-    // Add tenantId and timestamp to all files in data
-    const wrangledData = (data[0] ?? data).map(file => {
-        // Create a new object with tenantId added
-        return { ...file, tenantId: tenantId, timestamp: new Date() };
-    });
-
-    return wrangledData;
+    await streamInput.giveDataToTenant(tenantId, dataId);
 }
 
 /*const testIngestionPerformance = (tenantId, data, constraints) => {
@@ -35,16 +24,37 @@ const wrangleData = (tenantId, data) => {
         });
 }*/
 
+const clientstreamingest = async (tenantId, dataId, streamInput) => {
+    let consumer;
+    let createResults;
 
-const clientstreamingest = (tenantId, dataId, inputDirectory) => {
-    const data = readFiles(tenantId, dataId, inputDirectory);
-    const wrangledData = wrangleData(tenantId, data);
-    // Ingest data into mysimbdp-coredms through mysimbdp-daas API
-    if (tenantId === '1') {
-        ingestData(tenantId, wrangledData); /* Only tenant 1 wants to store the raw data next to the processed and aggregated data. */
+    await readFiles(tenantId, dataId, streamInput);
+
+    try {
+        // Consume data from Kafka topic at stream-input
+        const consumerObj = await consume(tenantId, `${tenantId}-topic`, `${tenantId}-group`);
+        // Consumer
+        consumer = consumerObj[0];
+        // POST request return results
+        createResults = consumerObj[1];
+        success = true;
+    } catch (error) {
+        console.error(error);
+        await consumer.disconnect();
+    } finally {
+        if (consumer) {
+            // Disconnect consumer When POST promises have resolved
+            // Wait for 100ms before checking again
+            while (createResults && createResults.length === 0) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            await consumer.disconnect();
+        }
     }
-    /* Process, aggregate and ingest processed data with Spark for tenants 1 and 2. */
-    batchProcess(tenantId, wrangledData);
+
+    /* Process, aggregate and ingest processed data with Spark stream-processor by calling it's api in mysimbdp */
+    streamProcess(tenantId, `${tenantId}-topic`, `${tenantId}-group`);
 }
 
 module.exports = { clientstreamingest };

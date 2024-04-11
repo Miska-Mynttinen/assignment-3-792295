@@ -1,4 +1,4 @@
-const { inputDirectory } = require('../../index.js')
+const { streamInput } = require('../../index.js')
 const { getOne } = require('../../database_api/tenantService.js');
 
 async function runTest() {
@@ -38,7 +38,7 @@ async function runTest() {
         ]
     };
 
-    inputDirectory.putFilesIntoInputDirectory(testData, '1');
+    streamInput.putFilesIntoStreamInput(testData, '1');
 
     const tenantId = '1';
     const timestamp = new Date();

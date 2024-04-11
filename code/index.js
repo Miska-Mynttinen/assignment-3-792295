@@ -54,7 +54,7 @@ if (require.main === module) {
 }
 
 const manager = new IngestManager();
-const inputDirectory = new StreamInput(manager);
-manager.inputDirectory = inputDirectory;
+const streamInput = new StreamInput(manager);
+manager.streamInput = streamInput;
 
-module.exports = { inputDirectory };
+module.exports = { streamInput };

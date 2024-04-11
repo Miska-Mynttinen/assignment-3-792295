@@ -2,17 +2,17 @@ const { clientstreamingest } = require('./client-stream-app')
 
 class IngestManager {
     constructor() {
-        this._inputDirectory = null;
+        this._streamInput = null;
         this.scheduleArray = [];
         this.scheduleJobsRunning = false;
     }
 
-    set inputDirectory(inputDirectory) {
-        this._inputDirectory = inputDirectory;
+    set streamInput(streamInput) {
+        this._streamInput = streamInput;
     }
 
-    get inputDirectory() {
-        return this._inputDirectory;
+    get streamInput() {
+        return this._streamInput;
     }
 
     notifyManager = (tenantId, dataId) => {
@@ -29,7 +29,7 @@ class IngestManager {
 
     callClientStreamApp = (tenantId, dataId) => {
         // An API call to the specifix tenants clientbatchingestionapp which is a black box.
-        clientstreamingest(tenantId, dataId, this._inputDirectory);
+        clientstreamingest(tenantId, dataId, this._streamInput);
     }
     
     scheduleJobs = () => {

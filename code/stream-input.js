@@ -1,5 +1,6 @@
 const { getAgreements } = require('./database_api/agreementService.js');
 const { createLog } = require('./logger.js')
+const produce = require('./assignment_1_code_used/kafka_producer.js')
 
 class StreamInput {
     constructor(MySimBDPBatchIngestManager) {
@@ -7,7 +8,7 @@ class StreamInput {
         this.files = [];
     }
 
-    putFilesIntoInputDirectory = async (insertedFiles, tenantId) => {
+    putFilesIntoStreamInput = async (insertedFiles, tenantId) => {
         /* Check fails if the tenant agreement is not followed. Most optimal place to stop before using computing resources. */
         const tenantAgreements = await getAgreements();
         const tenantsData = tenantAgreements.find(item => item.tenantId === tenantId);
@@ -61,10 +62,13 @@ class StreamInput {
         this.manager.notifyManager(tenantId, dataId);
     }
 
-    giveDataToTenant = (tenantId, dataId) => {
-        const filesToGive = this.files.filter((files) => (files[1] === tenantId) && (files[2] === dataId))
-        this.files.filter((files) => (files[1] !== tenantId) && (files[2] !== dataId))
-        return filesToGive.map(([insertedFiles]) => [insertedFiles]);
+    giveDataToTenant = async (tenantId, dataId) => {
+        const filesToGive = this.files.filter((files) => (files[1] === tenantId) && (files[2] === dataId));
+        this.files.filter((files) => (files[1] !== tenantId) && (files[2] !== dataId));
+        // const messages = data.map(message => ({ value: JSON.stringify(message) }));
+        const messages = filesToGive.map(message => ({ value: JSON.stringify(message) }));
+        await produce(`${tenantId}-topic`, messages);
+        // return filesToGive.map(([insertedFiles]) => [insertedFiles]);
     }
 
     generateRandomStringId = () => {
@@ -75,7 +79,6 @@ class StreamInput {
         }
         return result;
     }
-
 }
 
 module.exports = StreamInput;

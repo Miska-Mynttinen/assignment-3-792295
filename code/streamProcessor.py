@@ -1,16 +1,22 @@
+from kafka import KafkaConsumer
 import sys
 import json
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, avg
 
-def calculate_average(json_strings):
+def calculate_average(topic, group):
     # Initialize SparkSession
     spark = SparkSession.builder \
         .appName("Temperature_Humidity_Average") \
         .getOrCreate()
+    
+    consumer = KafkaConsumer(topic, group_id = group, bootstrap_servers = ['192.168.1.97:9092', '192.168.1.97:9093', '192.168.1.97:9094'])
 
     # Convert JSON strings to Python dictionaries
-    json_objects = [json.loads(json_str) for json_str in json_strings]
+    for message in consumer:
+        json_objects = json.loads(message.value.decode('utf-8'))
+
+    # json_objects = [json.loads(json_str) for json_str in json_strings]
 
     # Extract temperature and humidity values and convert them to numeric types
     temperature_values = []
@@ -31,12 +37,14 @@ def calculate_average(json_strings):
 
     return avg_temperature, avg_humidity
 
+
 if __name__ == "__main__":
-    # Get JSON strings from command-line arguments
-    json_strings = sys.argv[1:]
+    # Get topic and group from command-line arguments
+    topic = sys.argv[1]
+    group = sys.argv[2]
 
     # Calculate average temperature and humidity
-    avg_temp, avg_humidity = calculate_average(json_strings)
+    avg_temp, avg_humidity = calculate_average(topic, group)
 
     # Print results
     print("Average Temperature:", avg_temp)

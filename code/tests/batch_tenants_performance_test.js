@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
-const { inputDirectory } = require('../index.js')
+const { streamInput } = require('../index.js')
 // const { getTestSourceData } = require('../database_api/tenantService.js');
 
 async function runPerformanceTest() {
@@ -48,7 +48,7 @@ async function runPerformanceTest() {
         console.log('\nstartIndex', startIndex);
         console.log('\nendIndex', endIndex);
         for (let i = startIndex; i < endIndex; i++) {
-            await inputDirectory.putFilesIntoInputDirectory(testData[i], tenant);
+            await streamInput.putFilesIntoStreamInput(testData[i], tenant);
         }
         const endTime = Date.now();
         const iterationTime = endTime - startTime; // milliseconds

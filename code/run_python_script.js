@@ -1,14 +1,13 @@
 const { spawn } = require('child_process');
 
 // Run a Python script and return output, args are the given JSON items in an array
-function runScript(args, scriptPath) {
+function runScript(topic, group, scriptPath) {
   return new Promise((resolve, reject) => {
     // Convert JSON items to strings
-    const jsonStringArgs = args.map(JSON.stringify);
 
     // Use child_process.spawn method from 
     // child_process module and assign it to variable
-    const pyProg = spawn('./.venv/bin/python3', [scriptPath, ...jsonStringArgs]);
+    const pyProg = spawn('./.venv/bin/python3', [scriptPath, topic, group]);
 
     // Collect data from script and store it in an array
     let data = [];
@@ -43,9 +42,9 @@ function runScript(args, scriptPath) {
   });
 }
 
-async function runPythonScript(files) {
+async function runPythonScript(topic, group) {
   try {
-    const { avgTemp, avgHumidity } = await runScript(files, './streanProcessor.py');
+    const { avgTemp, avgHumidity } = await runScript(topic, group, './streamProcessor.py');
     console.log('Average Temperature:', avgTemp);
     console.log('Average Humidity:', avgHumidity);
     console.log('Success');

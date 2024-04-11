@@ -1,4 +1,4 @@
-const { inputDirectory } = require('../../index.js')
+const { streamInput } = require('../../index.js')
 // const { getTestSourceData } = require('../../database_api/tenantService.js');
 
 async function runTest() {
@@ -20,7 +20,7 @@ async function runTest() {
 
     /* Create a file that is over 5MB and try to ingest it */
     try {
-        const returnValue = await inputDirectory.putFilesIntoInputDirectory([jsonData], '2');
+        const returnValue = await streamInput.putFilesIntoStreamInput([jsonData], '2');
         console.log('returnValue: ', returnValue);
         if (returnValue === `A given file is too large. Allowed maximum size in MB is 5`) {
             // Handle the specific error
