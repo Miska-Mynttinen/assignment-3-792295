@@ -7,7 +7,6 @@ RUN apt update && \
 
 RUN curl -O https://archive.apache.org/dist/spark/spark-2.4.6/spark-2.4.6-bin-hadoop2.7.tgz
 RUN tar xvf spark-2.4.6-bin-hadoop2.7.tgz
-
 RUN mv spark-2.4.6-bin-hadoop2.7/ /opt/spark
 
 RUN echo "export SPARK_HOME=/opt/spark" >> ~/.bashrc
@@ -18,9 +17,9 @@ COPY requirements.txt requirements.txt
 
 RUN pip3 install -r requirements.txt
 
-# RUN pip3 install pyspark[sql] && pip3 install kafka-python
+# RUN pip3 install pyspark[sql]
 
-#For debugging our spark application
+# For debugging our spark application
 RUN apt install -y vim
 
 WORKDIR /stream-processor-tenant-1

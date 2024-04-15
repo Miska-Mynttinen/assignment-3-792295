@@ -1,4 +1,4 @@
-const { ingestData, streamProcess } = require('./mysimbdp-daas.js')
+// const { streamProcess } = require('./mysimbdp-daas.js')
 const consume = require('./client_raw_data_kafka_consumer.js');
 
 const readFiles = async (tenantId, dataId, streamInput) => {
@@ -6,27 +6,9 @@ const readFiles = async (tenantId, dataId, streamInput) => {
     await streamInput.giveDataToTenant(tenantId, dataId);
 }
 
-/*const testIngestionPerformance = (tenantId, data, constraints) => {
-    const startTime = Date.now() * 1000; // in seconds
-    
-    // Ingest the data
-    ingestTenantData(tenantId, data, constraints)
-        .then(() => {
-        const endTime = Date.now() * 1000;
-        const duration = endTime - startTime; // in seconds
-        const dataSize = data.length; // in bytes
-        const speed = dataSize / duration; // in bytes per second
-    
-        console.log(`Ingestion speed for tenant ${tenantId}: ${speed} bytes/s`);
-        })
-        .catch(error => {
-        console.error(`Ingestion failed for tenant ${tenantId}: ${error.message}`);
-        });
-}*/
-
 const clientstreamingest = async (tenantId, dataId, streamInput) => {
     await readFiles(tenantId, dataId, streamInput);
-    /* let consumer;
+    let consumer;
     let createResults;
 
     try {
@@ -50,7 +32,7 @@ const clientstreamingest = async (tenantId, dataId, streamInput) => {
 
             await consumer.disconnect();
         }
-    } */
+    }
 
     /* Process, aggregate and ingest processed data with Spark stream-processor by calling it's api in mysimbdp */
     // streamProcess(tenantId, `${tenantId}-topic`);

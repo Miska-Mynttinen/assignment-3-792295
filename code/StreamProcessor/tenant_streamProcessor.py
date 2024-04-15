@@ -1,13 +1,13 @@
 import sys
 import json
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, avg
+# from pyspark.sql import SparkSession
+# from pyspark.sql.functions import col, avg
 # spark-submit --master "spark://spark:7077" --packages  org.apache.spark:spark-streaming-kafka-0-8-assembly_2.11:2.4.6 pyspark_test.py
 from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils
 import logging
-from kafka import KafkaConsumer
+# from kafka import KafkaConsumer
 import os
 import pymongo
 import datetime
@@ -28,6 +28,10 @@ topic = os.getenv('topic', '1')
 
 sc = SparkContext("spark://spark:7077", appName="Temperature_Humidity_Average")
 sc.setLogLevel("WARN")
+
+spark = SparkSession.builder \
+        .appName("Temperature_Humidity_Average") \
+        .getOrCreate()
 
 class Ingestor:
     def __init__(self):
@@ -68,7 +72,7 @@ def calculate_average(messages, ingestor):
 ssc = StreamingContext(sc, WINDOW_DURATION)
 
 # Create Kafka stream
-kafkaStream = KafkaUtils.createStream(ssc, zookeeper_quorum, consumer_group_id, {'sensors.temperature.4':1})
+kafkaStream = KafkaUtils.createStream(ssc, zookeeper_quorum, consumer_group_id, {topic:1})
 
 # Initialize Ingestor
 ingestor = Ingestor()

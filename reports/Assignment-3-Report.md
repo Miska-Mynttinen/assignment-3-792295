@@ -5,6 +5,8 @@
 ### 1. Tenant data and data analytics
 - Data samples based on: Open data about air quality monitoring from Germany (https://github.com/opendata-stuttgart/meta/wiki/EN-APIs)
 
+- Dataset is suitable for data analytics because it consistently has the temperature and humidity values given regularly. These can easily be used to calculate averages and make predictions about the future or gather up old data for statistics.
+
 ```json
 {
   "id": "String",
@@ -56,13 +58,13 @@
 
 ### 3. Stream Processing Considerations: Time, Windows, Out-of-Order Data, and Watermarks
 
-- (i): Types of time to consider with stream data sources for the analytics are event time, ingestion time and processing time. Event time is the time when the event actually occurred and is usually embedded in the data record itself. Ingestion time is the time taken when the data is ingested into the stream processing system. Processing time is the time when the event is processed by the stream processor. If the data sources have no timestamps associated with records, a solution could be to attach a timestamp at the point of ingestion into the stream processing system. If the data sources have no timestamps associated with records, we could use the arrival time of the data record at the stream processor as a proxy for event time.
+- (i): Types of time to consider with stream data sources for the analytics are event time, ingestion time and processing time. Event time is the time when the event actually occurred and is usually embedded in the data record itself. Ingestion time is the time taken when the data is ingested into the stream processing system. Processing time is the time when the event is processed by the stream processor. If the data sources have no timestamps associated with records, a solution could be to attach a timestamp at the point of ingestion into the stream processing system.
 
-- (ii): Types of windows should developed for the analytics should be tumbling windows and sliding windows. Tumbling windows are fixed-size, non-overlapping and gap-less windows that “tumble” forward in time. They are suitable for analytics where we want to provide updates at regular intervals and each update should only consider the latest batch of data. Sliding windows are also fixed-size but they slide forward in time by a certain slide interval, which can be less than the window size, hence they can overlap. They are suitable for analytics where we want to provide smoother and more timely updates, and each update should consider all the data in the window.
+- (ii): Types of windows should be tumbling windows and sliding windows. Tumbling windows are better for regular intervals of data, so if the data is consistently arriving to be processed tumbling windows are better. Sliding windows are better when the data is inconsistently arriving to be processed, so if the data is irregular they should be used. No window would just mean handling the data rigidly when it arrives which does not give a lot to analyze in terms of amount of data.
 
-- (iii): Out-of-order data/records could be caused by the mycoresimbdp input-stream Kafk producer problems, tenants consumer problems, network delays, buffering or sensor issues. For example, in our running example of air quality monitoring, if the sensor data is being transmitted over a network, then network congestion or failures could cause some data records to arrive late at the stream processor, resulting in out-of-order data.
+- (iii): Out-of-order data/records could be caused by the mycoresimbdp input-stream Kafka producer problems, tenants consumer problems, network delays, buffering or sensor issues. For example, if the sensor data is being transmitted over a network, then network congestion or failures could cause some data records to arrive late at the stream processor, resulting in out-of-order data.
 
-- (iv): Watermarks are needed for the system to function, because without them creating a window for the stream processor is difficult and inaccurate. They allow for the handling of out-of-order and delayed data.
+- (iv): Watermarks are probably needed for the system to function, because without them creating a window for the stream processor is difficult and inaccurate. They allow for the handling of out-of-order and delayed data.
 
 
 ### 4. Collect logging metrics
@@ -76,30 +78,37 @@
 - timestamp, Measured by: The timestamp for the metric log creation. Relevance: General logging.
 
 
-### 5. 
-- Figure of system and explanations of how it works and why the tehcnologies and methods were chosen (Kafka and RESTAPI).
+### 5. Architecture
+![alt text](image-1.png)
 
-FIGURE:
+Tenant data sources: Tenants inputs data into mysimbdp stream-input as messages.
 
-Tenant data sources: Tenants input data into mysimbdp stream-input as messages 
+Mysimbdp messaging system: If the message aligns with the tenant agreement, mysimbdp gets data from stream-input by using Kafka to create a producer for that message that procuces the messages for the specific tenants topic after the Client-stream-app requests stream-input for the data trough a REST API call giveDataToTenant(). Stream-input calls mysimbdp ingest-manager to inform that it has messages for a specific tenant through REST API call notifyManager(). Kafka is chosen as the messaging system due to fast an easy to use generally. It also works well with Spark so it fits well for the different type of analytics done here. Also I already used it in previous assignments.
 
-Mysimbdp messaging system: If the message aligns with the tenant agreement, mysimbdp gets data from stream-input by using Kafka to create a producer for that message if it aligns with the tenant agreement. Stream-input calls mysimbdp ingest-manager to inform that it has messages for a specific tenant through REST API call notifyManager().
+Tenant streaming analytics app: Client-stream-app creates a consumer (using Kafka or some other MQTT, we don't know due to it being a black box) that consumes the messages from mysimbdp stream-input topic specific for the tenant, by first telling the stream-input to produce the messages, after the mysimbdp ingest-manager has scheduled and called the Client-stream-app through REST API call callClientStreamApp().
 
-Tenant streaming analytics app: Client-stream-app creates a consumer (using Kafka or some other MQTT) that consumes the messages from mysimbdp stream-input topic specific for the tenant after the mysimbdp ingest-manager has scheduled and called the Client-stream-app through REST API call callClientStreamApp().
+Mysimbdp streaming computing service: Stream-processor in mysimbdp that uses Spark to create consumer that get the data from tenants messages in message queues at mysimbdp stream-input. Calculates the average temperature and humidity from the tenant data for the specific window. Tenants provide their specific streaming logic as python files tha are configured to work with our mysimbdp Spark processor. So each tenant has their own Stream processor and Batch processor running on our platform with their specific configuration files that fit the tenant data schemas. Spark was chosen due to being able to be configured with Kafka with specific API. Spark also has pretty easy computing logic for calculating data and is fast for calculating averages.
 
-Mysimbdp streaming computing service: Stream-processor in mysimbdp that uses Spark to create consumer that get the data from tenants messages in message ques at mysimbdp stream-input. Calculates the average temperature and humidity from the tenant data for the specific window. Client-stream-app informs the stream-processor that the stream-input has a specific message queue topic that it needs to consume to get the correct data to consume. Stream-processor returns the processed to the client-stream-app through a REST API call returnProcessedData().
+Ingesting data to mysimbdp-coredms: Client-stream-app can ingest raw data by calling mysimbdp-daas API which ingest the data into mysimbdp-coredms (MongoDB). The tenants Spark processor with their specific configurations is connected to mysimbdp-coredms due to running on our platform and ingest the processed data of the average temperature and humidity to mysimbdp-coredms.  
+- Processed data is a JSON document:
+```json
+{
+  "tenantId": "String",
+  "timestamp": "String",
+  "avg_temperature": "String",
+  "avg_humidity": "String"
+}
+```
 
-Ingesting data to mysimbdp-coredms: Client-stream-app can ingest raw data and the processed data, retrieved from the stream-processor, by calling mysimbdp-daas API which ingest the data into mysimbdp-coredms (MongoDB).
-
-Batch analysis: Mysimbdp batch-processor does batch analysis on the tenant data stored in mysimbdp-coredms by calculating the average monthly temperature and monthly humidity every month based the timestamps on the specific tenants data and then stores the analyzed data to mysimbdp-coredms.
-
-- EXPLAIN TECHNOLOGY CHOICES AND DECISIONS. ALSO WHAT WAS REUSED FROM PREVIOUS ASSIGNMENTS.
+Batch analysis: Mysimbdp batch-processor does batch analysis on the tenant data stored in mysimbdp-coredms by calculating the average monthly temperature and monthly humidity every month based the timestamps on the specific tenants data and then stores the analyzed data to mysimbdp-coredms. Gets the data from mysimbdp-coredms to analyze and inserts the processed data every month. Runs on our platform and is configured by the tenants configuration file.
 
 
+Previous assignment code used: All in the assignment_1_code_used folder, docker-compose.yml parts, Dockerfile, index.js, logger.js, database_api folder, some components have parts reused but changed.
 
 
 
 ## Part 2
+
 ### 1. Data schema and analytics output
 ##### (i):
 Data schema for sensor data:
@@ -146,132 +155,76 @@ Data schema for sensor data:
 Stream-processor calculates the average temperature and humidity (avg_temp, avg_humidity).
 Batch-processor calculates the average monthly temperature and humidity (avg_monthly_temp, avg_monthly_humidity).
 
+```json
 {
-  "tenant_id": "String",
-  "window_start_time": "String",
-  "window_end_time": "String",
-  "average_temperature": "Float",
-  "average_humidity": "Float"
+  "tenantId": "String",
+  "timestamp": "String",
+  "avg_monthly_temperature": "String",
+  "avg__monthlyy humidity": "String"
 }
+```
 
 ##### (ii):
-- Data is deserialized by the client-stream-app consumer from a message back to JSON data (using Kafka in example). Data stays as JSON as long as possible due to the ease of creating a document-model database using MondoDB and utilizing it fully.
+- Data is deserialized by the client-stream-app consumer and stream-processor consumer from a message back to JSON data (using Kafka in example). Data stays as JSON as long as possible due to the ease of creating a document-model database using MondoDB and utilizing it fully.
 
 
 ### 2. Tenant-stream-app
-- Client-stream-app creates a consumer (using Kafka or some other MQTT) that consumes the messages from mysimbdp stream-input topic specific for the tenant after the mysimbdp ingest-manager has scheduled and called the Client-stream-app through REST API call callClientStreamApp().
+Tenant streaming analytics app: Client-stream-app creates a consumer (using Kafka or some other MQTT, we don't know due to it being a black box) that consumes the messages from mysimbdp stream-input topic specific for the tenant, by first telling the stream-input to produce the messages, after the mysimbdp ingest-manager has scheduled and called the Client-stream-app through REST API call callClientStreamApp().
 
-- Stream-processor in mysimbdp that uses Spark to create consumer that get the data from tenants messages in message ques at mysimbdp stream-input. Calculates the average temperature and humidity from the tenant data for the specific window. Client-stream-app informs the stream-processor that the stream-input has a specific message queue topic that it needs to consume to get the correct data to consume. Stream-processor returns the processed to the client-stream-app through a REST API call returnProcessedData().
+Mysimbdp streaming computing service: Stream-processor in mysimbdp that uses Spark to create consumer that get the data from tenants messages in message queues at mysimbdp stream-input. Calculates the average temperature and humidity from the tenant data for the specific window. Tenants provide their specific streaming logic as python files tha are configured to work with our mysimbdp Spark processor. So each tenant has their own Stream processor and Batch processor running on our platform with their specific configuration files that fit the tenant data schemas. Spark was chosen due to being able to be configured with Kafka with specific API. Spark also has pretty easy computing logic for calculating data and is fast for calculating averages.
+
+Ingesting data to mysimbdp-coredms: Client-stream-app can ingest raw data by calling mysimbdp-daas API which ingest the data into mysimbdp-coredms (MongoDB). The tenants Spark processor with their specific configurations is connected to mysimbdp-coredms due to running on our platform and ingest the processed data of the average temperature and humidity to mysimbdp-coredms.
+
+Batch analysis: Mysimbdp batch-processor does batch analysis on the tenant data stored in mysimbdp-coredms by calculating the average monthly temperature and monthly humidity every month based the timestamps on the specific tenants data and then stores the analyzed data to mysimbdp-coredms. Gets the data from mysimbdp-coredms to analyze and inserts the processed data every month. Runs on our platform and is configured by the tenants configuration file.
 
 - Client-stream-app wrangles data by adding a tenant id and timestamp to all data before sending it through a REST API in mysimbdp-daas to ingest it to mysimbdp-coredms.
-
-- Client-stream-app can ingest raw data and the processed data, retrieved from the stream-processor, by calling mysimbdp-daas API which ingest the data into mysimbdp-coredms (MongoDB).
 
 ### 3. Testing client-stream-app
 - Test data is generated based on the schema given earlier using a randomized generator utility function in the tests themselves.
 
-- Basic test results:
-
-- Performance test results:
-
-- Discuss the analytics and its performance observations when you increase/vary the speed of streaming data:
-
-
 ### 4. 
-- Show test configuration/results.
-
-- Send wrong data to the system and see the result.
-
-- Data with the wrong schema is generated withing the tests using a generator utility function.
-
-- How does the system deal with exceptions, failures, and decreasing performance. With different error rates.
-
+- 
 
 ### 5. 
-- Explain parallelism in the system and show performance test with atleast 2 tenants.
-
-- Performance issues found:
-
-- Does parallelism cause performance problems?
-
-
+Parallelism is implemented by tenants having dedicated topics, stream-processors and batch-processors defined by their tenant id. Too many tenants would mean that the platform has to run so many instances of spark processors that the infrastructure can't handle it.
 
 
 
 ## Part 3
 
 ### 1. RESTful service
-- Tenants client-stream-app can just send the processed data retrieved from mysimbdp-coredms or stream-processor to the RESTful API using the defined API call and then ingest the returned analyzed data to mysimbdp-coredms.
+- Tenants client-stream-app can just send the processed data retrieved from mysimbdp-coredms to the RESTful API using the defined API call and then ingest the returned analyzed data to mysimbdp-coredms.
 
 - API endpoint defining, get data to send, transform data to fit the requirements and finally handle return data (ingest to mysimbdp-coredms).
 
 ### 2. Batch analytics
-Batch analysis: Mysimbdp batch-processor does batch analysis on the tenant data stored in mysimbdp-coredms by calculating the average monthly temperature and monthly humidity every month based the timestamps on the specific tenants data and then stores the analyzed data to mysimbdp-coredms.
+Batch analysis: Mysimbdp batch-processor does batch analysis on the tenant data stored in mysimbdp-coredms by calculating the average monthly temperature and monthly humidity every month based the timestamps on the specific tenants data and then stores the analyzed data to mysimbdp-coredms. Gets the data from mysimbdp-coredms to analyze and inserts the processed data every month. Runs on our platform and is configured by the tenants configuration file.
 
 - Get tenant data from mysimbdp-coredms through a REST API with filtering for datapoints that have a timestamp for a specific month.
 - Use Spark to get the average monthly temperature and average monthly humidity from the retrieved data. Also add tenant id and timestamp.
 - Ingest the processed data to mysimbdp-coredms by calling the REST API defined in mysimbdp-daas.
 
+```json
+{
+  "tenantId": "String",
+  "timestamp": "String",
+  "avg_monthly_temperature": "String",
+  "avg__monthlyy humidity": "String"
+}
+```
+
 ### 3. Analysis with connected workflow
-+---------------------+
-                                      | Streaming Analytics |
-                                      +----------+----------+
-                                                 |
-                                                 v
-                                      +----------+----------+
-                                      |      Detect        |
-                                      | Critical Condition |
-                                      +----------+----------+
-                                                 |
-                                    Critical Condition Detected
-                                                 |
-                                                 v
-                                      +----------+----------+
-                                      |   Workflow Orchestrator   |
-                                      +----------+----------+
-                                                 |
-                                    Triggers Batch Analytics
-                                                 |
-                                                 v
-                                      +----------+----------+
-                                      |   Batch Analytics   |
-                                      +----------+----------+
-                                                 |
-                                        Analyze Historical Data
-                                                 |
-                                                 v
-                                      +----------+----------+
-                                      |  Share Result to   |
-                                      |   Cloud Storage    |
-                                      +----------+----------+
-                                                 |
-                                      +----------v----------+
-                                      |   Notify User      |
-                                      |   within Tenant    |
-                                      +---------------------+
-Workflow Explanation:
-Streaming Analytics: The streaming analytics component continuously monitors the incoming data streams and detects critical conditions, such as a very high rate of alerts.
-
-Detect Critical Condition: When a critical condition is detected by the streaming analytics, it triggers an event indicating the need for further analysis.
-
-Workflow Orchestrator: The workflow orchestrator receives the event triggered by the critical condition detection and coordinates the execution of subsequent tasks.
-
-Batch Analytics: Upon receiving the trigger from the workflow orchestrator, the batch analytics process is initiated to analyze historical data stored in the database.
-
-Share Result to Cloud Storage: Once the batch analytics is completed, the results are shared with a cloud storage service for storage and accessibility.
-
-Notify User within Tenant: After the results are stored in the cloud storage, a notification is sent to the user within the tenant to inform them about the availability of the analyzed data.
-
-Using Workflow Technologies:
-Workflow Orchestrator: The workflow orchestrator, such as Apache Airflow or Apache NiFi, manages the sequence of tasks and coordinates the interactions between streaming analytics, batch analytics, cloud storage, and user notification.
-
-Task Dependencies: Workflow technologies enable defining dependencies between tasks, ensuring that the batch analytics is triggered only when a critical condition is detected by the streaming analytics.
-
-Event-Based Triggers: Events triggered by the streaming analytics component serve as triggers for initiating the batch analytics process, allowing for seamless integration and coordination between the two.
-
-Monitoring and Error Handling: Workflow technologies provide monitoring capabilities to track the progress of tasks and handle errors or failures gracefully, ensuring reliable execution of the entire workflow.                
-
-
+- Data Monitor: Monitors data streams and identifies critical situations.
+->
+- Critical Situation Identifier: Triggers an event for deeper analysis upon identification.
+->
+- Task Coordinator: Manages the execution of subsequent tasks upon receiving the event.
+->
+- Historical Data Analyst: Analyzes historical data upon receiving the trigger.
+->
+- Cloud Storage Updater: Stores the results in a cloud storage service for accessibility.
+->
+- User Notifier: Sends a notification to the user about the availability of the analyzed data.
 
 ### 4. Schema evolution
 Versioning in the schema and data. Always show schema version as a property.
@@ -284,4 +237,4 @@ Versioning in the schema and data. Always show schema version as a property.
 
 
 ### 5. 
-- Yes if a lot of checks are implemented in many places. This would reduce performance notably.
+Exactly-once would be ideal for data integrity, but implementing it adds a lot of checks to the systems and delays which decreases performance by notable amounts. The original messages sent to stream-input should have watermarks, then the stream-input should also utilize it's own watermarks, then the client-stream-app and stream-processor should have watermarks. Then finally the batch-processor would need to implement some kind of checking and data integrity mechanism. Would be overall very cumbersome and inefficient.

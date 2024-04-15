@@ -183,11 +183,6 @@ services:
     networks:
       - mysimbdp-network
     restart: always
-    depends_on:
-      - zookeeper
-      - kafka0
-      - kafka1
-      - kafka2
     environment:
       - SPARK_MODE=master
 
@@ -209,12 +204,14 @@ services:
     build: ./StreamProcessor
     depends_on:
       - zookeeper
+    networks:
+      - mysimbdp-network
     environment:
       - MASTER=spark://spark:7077
       - topic='1'
     volumes:
-      - "./SparkProcessor/tenant_streamProcessor.py:/stream-processor-tenant-1/test_script.py"
-    command: ["test_script.py"]
+      - "./StreamProcessor/tenant_streamProcessor.py:/stream-processor-tenant-1/tenant_streamProcessor.py"
+    command: ["tenant_streamProcessor.py"]
       
 volumes:
   kafka0:
