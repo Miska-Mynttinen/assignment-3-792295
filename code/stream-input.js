@@ -67,7 +67,7 @@ class StreamInput {
         this.files.filter((files) => (files[1] !== tenantId) && (files[2] !== dataId));
         // const messages = data.map(message => ({ value: JSON.stringify(message) }));
         const messages = filesToGive.map(message => ({ value: JSON.stringify(message) }));
-        await produce(`${tenantId}-topic`, messages);
+        await produce(`${tenantId}`, messages);
         // return filesToGive.map(([insertedFiles]) => [insertedFiles]);
     }
 

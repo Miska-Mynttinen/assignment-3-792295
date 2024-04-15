@@ -7,10 +7,10 @@ const ingestData = async (dataToStore) => {
     await create(dataToStore);
 }
 
-const streamProcess = async (tenantId, topic, group) => {
+const streamProcess = async (tenantId, topic) => {
     let metrics = {};
     metrics.ingestionStartTime = new Date;
-    const processedData = await runPythonScript(topic, group);
+    const processedData = await runPythonScript(topic);
 
     // id is only for testing for now
     const dataToStore = {

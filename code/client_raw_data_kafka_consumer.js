@@ -31,13 +31,14 @@ const consume = async (tenantId, topic, groupId) => {
 };
 
 const wrangleData = (tenantId, data) => {
-    // If data is not an array, wrap it in an array
-    const dataArray = Array.isArray(data) ? data : [data];
-    // Add tenantId and timestamp to all files in data
-    const wrangledData = dataArray.map(file => {
+    // If data is an array, use its first element, otherwise use data directly
+    const dataArray = Array.isArray(data) ? data[0] : data;
+
+    // Ensure dataArray is an array before attempting to map over it
+    const wrangledData = Array.isArray(dataArray) ? dataArray.map(file => {
         // Create a new object with tenantId added
         return { ...file, tenantId: tenantId, timestamp: new Date() };
-    });
+    }) : { ...dataArray, tenantId: tenantId, timestamp: new Date() }; // If dataArray is not an array, wrap it in an array
 
     return wrangledData;
 }

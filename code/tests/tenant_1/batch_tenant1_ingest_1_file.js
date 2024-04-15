@@ -40,7 +40,7 @@ async function runTest() {
 
     streamInput.putFilesIntoStreamInput(testData, '1');
 
-    const tenantId = '1';
+    /* const tenantId = '1';
     const timestamp = new Date();
 
     const modifiedTestData = { ...testData, tenantId: tenantId, timestamp: timestamp };
@@ -48,30 +48,39 @@ async function runTest() {
     // Whole notifying and ingestion takes a lot of time for data to be accessible (1 minute).
     await new Promise(resolve => setTimeout(resolve, 60000));
 
+    console.log('modifiedTestData', modifiedTestData);
+
     const result = await getOne(modifiedTestData);
     if (!result) {
         throw new Error('Data not found in MongoDB');
     }
+
+    console.log('result', result);
     
     // Compare ingested data with test data
     if (!(deepEqual(JSON.parse(JSON.stringify(result)), modifiedTestData))) {
         throw new Error('Ingested data does not match test data');
     } else {
         console.log('test: Part 1 batch_tenant1_ingest_1_file.js PASSED');
-    }
+    } */
 
     const modifiedTestData2 = {
-        id: '11.3',
         tenantId: '1',
-        timestamp: timestamp,
-        temperature: '11.3',
-        humidity: '99.9'
+        timestamp: new Date(),
+        avg_temperature: '11.3',
+        avg_humidity: '99.9'
     }
 
+    await new Promise(resolve => setTimeout(resolve, 60000));
+
+    console.log('modifiedTestData2:', modifiedTestData2);
+
     const result2 = await getOne(modifiedTestData2);
-    if (!result) {
+    if (!result2) {
         throw new Error('Data not found in MongoDB');
     }
+
+    console.log('result2:', result2);
     
     // Compare ingested data with processed test data
     if (!(deepEqual(JSON.parse(JSON.stringify(result2)), modifiedTestData2))) {

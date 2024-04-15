@@ -25,10 +25,9 @@ const readFiles = async (tenantId, dataId, streamInput) => {
 }*/
 
 const clientstreamingest = async (tenantId, dataId, streamInput) => {
-    let consumer;
-    let createResults;
-
     await readFiles(tenantId, dataId, streamInput);
+    /* let consumer;
+    let createResults;
 
     try {
         // Consume data from Kafka topic at stream-input
@@ -51,10 +50,10 @@ const clientstreamingest = async (tenantId, dataId, streamInput) => {
 
             await consumer.disconnect();
         }
-    }
+    } */
 
     /* Process, aggregate and ingest processed data with Spark stream-processor by calling it's api in mysimbdp */
-    streamProcess(tenantId, `${tenantId}-topic`, `${tenantId}-group`);
+    // streamProcess(tenantId, `${tenantId}-topic`);
 }
 
 module.exports = { clientstreamingest };

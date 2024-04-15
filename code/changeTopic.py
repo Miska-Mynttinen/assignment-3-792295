@@ -1,4 +1,4 @@
-from streamProcessor import calculate_average
+from code.StreamProcessor.streamProcessor import calculate_average
 import sys
 import json
 from pyspark.sql import SparkSession

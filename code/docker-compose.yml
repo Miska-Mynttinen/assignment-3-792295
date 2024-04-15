@@ -6,10 +6,8 @@ networks:
   mysimbdp-network:
     name: mysimbdp-network
     driver: bridge
-    #external: true
 
 services:
-
   mysimbdp:
     container_name: mysimbdp
     build:
@@ -24,12 +22,27 @@ services:
       - kafka0
       - kafka1
       - kafka2
+      - spark
     depends_on:
       - mongo
     ports:
       - "3000:3000"
     volumes:
       - .:/app
+  
+  zookeeper:
+    container_name: zookeeper
+    image: 'bitnami/zookeeper:latest'
+    restart: always
+    ports:
+      - "2181:2181"
+    networks:
+      - mysimbdp-network
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    volumes:
+      - zookeeper_data:/bitnami/zookeeper/data
+      - zookeeper_conf:/bitnami/zookeeper/conf
 
   kafka0:
     container_name: kafka0
@@ -41,6 +54,7 @@ services:
     networks:
       - mysimbdp-network
     environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       - KAFKA_BROKER_ID=0
       - KAFKA_CFG_NODE_ID=0
       - KAFKA_ENABLE_KRAFT=yes
@@ -72,6 +86,7 @@ services:
     networks:
       - mysimbdp-network
     environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       - KAFKA_BROKER_ID=1
       - KAFKA_CFG_NODE_ID=1
       - KAFKA_ENABLE_KRAFT=yes
@@ -103,6 +118,7 @@ services:
     networks:
       - mysimbdp-network
     environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       - KAFKA_BROKER_ID=2
       - KAFKA_CFG_NODE_ID=2
       - KAFKA_ENABLE_KRAFT=yes
@@ -158,18 +174,22 @@ services:
       - ME_CONFIG_MONGODB_ADMINUSERNAME=root
       - ME_CONFIG_MONGODB_ADMINPASSWORD=password
 
-
-  # ASSIGNMENT 3:
   spark:
     container_name: spark
     image: bitnami/spark:latest
-    expose:
-      - "7077"
     ports:
-      - '8082:8082'
+      - '8082:8080'
+      - '7077:7077'
     networks:
       - mysimbdp-network
     restart: always
+    depends_on:
+      - zookeeper
+      - kafka0
+      - kafka1
+      - kafka2
+    environment:
+      - SPARK_MODE=master
 
   spark-worker:
     image: bitnami/spark:latest
@@ -182,6 +202,19 @@ services:
       - SPARK_MASTER_URL=spark://spark:7077
       - SPARK_WORKER_MEMORY=1G
       - SPARK_WORKER_CORES=1
+    ports:
+      - '8084:8081'
+
+  stream-processor-tenant-1:
+    build: ./StreamProcessor
+    depends_on:
+      - zookeeper
+    environment:
+      - MASTER=spark://spark:7077
+      - topic='1'
+    volumes:
+      - "./SparkProcessor/tenant_streamProcessor.py:/stream-processor-tenant-1/test_script.py"
+    command: ["test_script.py"]
       
 volumes:
   kafka0:
@@ -189,4 +222,8 @@ volumes:
   kafka1:
     driver: local
   kafka2:
+    driver: local
+  zookeeper_data:
+    driver: local
+  zookeeper_conf:
     driver: local
