@@ -1,2 +1,35 @@
-the content of this file should be the output of the log of your own git project for this assignment
-using git log command to export your git log
+commit e9047f16c936ad511955fe92de19766fe6b6a7c4 (HEAD -> master)
+Author: Miska-Mynttinen <miska.mynttinen@aalto.fi>
+Date:   Tue Apr 16 00:52:13 2024 +0300
+
+    finished report and all
+
+commit f733f7f97a7a5fab5765d762e2fcae9ce9ce8350 (origin/master)
+Author: Miska-Mynttinen <miska.mynttinen@aalto.fi>
+Date:   Mon Apr 15 18:50:25 2024 +0300
+
+    architecture changes
+
+commit 33d33695b10ed80a26b7164ccd7c0678e2913580
+Author: Miska-Mynttinen <miska.mynttinen@aalto.fi>
+Date:   Thu Apr 11 23:17:57 2024 +0300
+
+    Created new components and modified old components
+
+commit 0534e5b767c70a69eb82b193e899725c04ce80ba
+Author: Miska-Mynttinen <miska.mynttinen@aalto.fi>
+Date:   Wed Apr 10 21:26:32 2024 +0300
+
+    Finished designs and made changes to system and worked on components
+
+commit 9fa4bdcebe78ddd2e8d51459e86784cba21a3eeb
+Author: Miska-Mynttinen <miska.mynttinen@aalto.fi>
+Date:   Tue Apr 9 22:48:45 2024 +0300
+
+    Part 1 designs planned
+
+commit babb55575c87144a5b790d784c422c6c9f146f8e
+Author: Miska-Mynttinen <miska.mynttinen@aalto.fi>
+Date:   Thu Apr 4 22:18:40 2024 +0300
+
+    project 3 initial commit
